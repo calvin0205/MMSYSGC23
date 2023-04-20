@@ -9,11 +9,11 @@
 #include "multipathschedulerI.h"
 #include <numeric>
 
+
 /// min RTT Round Robin multipath scheduler
 class RRMultiPathScheduler : public MultiPathSchedulerAlgo
 {
 public:
-    static int min_RTT;
     MultiPathSchedulerType SchedulerType() override
     {
         return MultiPathSchedulerType::MULTI_PATH_SCHEDULE_RR;
@@ -120,14 +120,14 @@ public:
     uint32_t DoSinglePathSchedule(const fw::ID& sessionid) override
     {
         SPDLOG_DEBUG("session:{}", sessionid.ToLogStr());
+        auto&& session_itor = m_dlsessionmap.find(sessionid);
         // if key doesn't map to a valid set, []operator should create an empty set for us
-        auto& session = m_dlsessionmap[sessionid];
-        if (!session)
+        if (session_itor==m_dlsessionmap.end())
         {
             SPDLOG_WARN("Unknown session: {}", sessionid.ToLogStr());
             return -1;
         }
-
+        auto& session = session_itor->second;
         auto uni32DataReqCnt = session->CanRequestPktCnt();
         SPDLOG_DEBUG("Free Wnd : {}", uni32DataReqCnt);
         // try to find how many pieces of data we should fill in sub-task queue;
@@ -193,13 +193,8 @@ public:
     {
         SPDLOG_TRACE("");
         sortmmap.clear();
-        int count = 0;
         for (auto&& sessionItor: m_dlsessionmap)
         {
-            if(count == 0) {
-                min_RTT = sessionItor.second->GetRtt().ToSeconds();
-                count++;
-            }
             auto score = sessionItor.second->GetRtt();
             sortmmap.emplace(score, sessionItor.second);
         }
@@ -361,4 +356,3 @@ private:
 
 };
 
-// int RRMultiPathScheduler::min_RTT=0;

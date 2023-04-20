@@ -1,7 +1,7 @@
 // Copyright (c) 2023. ByteDance Inc. All rights reserved.
 
 #include "demotransportcontroller.hpp"
-int RRMultiPathScheduler::min_RTT=0;
+
 DemoTransportCtlConfig::DemoTransportCtlConfig() : TransPortControllerConfig()
 {
 }
@@ -27,7 +27,6 @@ DemoTransportCtl::DemoTransportCtl(std::shared_ptr<TransPortControllerConfig> ct
     renoccConfig.maxCwnd = m_transCtlConfig->maxWnd;
     renoccConfig.ssThresh = m_transCtlConfig->slowStartThreshold;
     SPDLOG_DEBUG("config:{}", m_transCtlConfig->DebugInfo());
-
 }
 
 DemoTransportCtl::~DemoTransportCtl()
@@ -156,11 +155,13 @@ void DemoTransportCtl::OnSessionDestory(const fw::ID& sessionid)
     if (sessionItor == m_sessStreamCtlMap.end())
     {
         // warn: try to destroy a session we don't know
+        SPDLOG_WARN(" try to destroy a session we don't know");
     }
     else
     {
         m_sessStreamCtlMap[sessionid]->StopSessionStreamCtl();
         m_sessStreamCtlMap[sessionid].reset();
+        m_sessStreamCtlMap.erase(sessionid);
     }
 
 }
